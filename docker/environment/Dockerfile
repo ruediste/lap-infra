@@ -4,12 +4,4 @@
 FROM localhost:5000/infra_ubuntu
 MAINTAINER = Ruedi Steinmann <ruediste@gmail.com>
 
-# Install Packages
-ENV DEBIAN_FRONTEND noninteractive
-RUN apt-get install -y git
-
-# Add run script
-ADD run.sh /run.sh
-RUN chmod +x /run.sh
-
 VOLUME /env
