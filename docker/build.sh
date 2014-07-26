@@ -1,6 +1,8 @@
-sudo docker build -t localhost:5000/ubuntu $@ ubuntu
-sudo docker build -t localhost:5000/environment $@ environment
-sudo docker build -t localhost:5000/dns $@ dns
+#!/bin/bash
 
-cp admin_rsa.pub gitolite/
-sudo docker build -t localhost:5000/gitolite $@ gitolite
+cp ../admin_rsa.pub gitolite/
+
+for dir in `find . -maxdepth 1 -mindepth 1 -type d -printf '%f\n`
+do
+  sudo docker build -t localhost:5000/infra_$dir $@ $dir
+done

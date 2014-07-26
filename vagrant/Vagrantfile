@@ -12,8 +12,6 @@ CONFIG = File.join(File.dirname(__FILE__), "config.rb")
 require 'socket'
 $hostname = Socket.gethostname
 
-puts $hostname
-
 # Defaults for config options defined in CONFIG
 $num_instances=Hash.new 1
 
@@ -24,6 +22,7 @@ $vb_gui = false
 $vb_memory = Hash.new 1024
 $vb_cpus = Hash.new 1
 $static_ip = {}
+$bridge_interface = {}
 
 # Attempt to apply the deprecated environment variable NUM_INSTANCES to
 # $num_instances while allowing config.rb to override it
@@ -60,7 +59,7 @@ Vagrant.configure("2") do |config|
     config.vbguest.auto_update = false
   end
 
-  config.ssh.private_key_path = ["private_rsa", "vagrant_rsa" ]
+  config.ssh.private_key_path = ["../admin_rsa", "vagrant_rsa" ]
 
   (1..$num_instances[$hostname]).each do |i|
     config.vm.define vm_name = "#{$hostname}-core-%02d" % i do |config|
@@ -101,9 +100,10 @@ Vagrant.configure("2") do |config|
       end
 
       if $static_ip["#{$hostname}_#{i}"]
-        config.vm.network "public_network", ip: $static_ip["#{$hostname}_#{i}"]
+        config.vm.network "public_network", bridge: $bridge_interface["#{$hostname}_#{i}"], 
+          ip: $static_ip["#{$hostname}_#{i}"]
       else
-        config.vm.network "public_network"
+        config.vm.network "public_network", bridge: $bridge_interface["#{$hostname}_#{i}"]
       end
 
       # Uncomment below to enable NFS for sharing the host machine into the coreos-vagrant VM.
@@ -115,7 +115,7 @@ Vagrant.configure("2") do |config|
       end
 
       # replace/remove insecure vagrant keys
-      config.vm.provision :file, :source => "private_rsa.pub", :destination => "/home/core/.ssh/authorized_keys"
+      config.vm.provision :file, :source => "../admin_rsa.pub", :destination => "/home/core/.ssh/authorized_keys"
       config.vm.provision :shell, :inline => "rm /home/core/.ssh/authorized_keys.d/coreos-cloudinit", :privileged => true
 
     end

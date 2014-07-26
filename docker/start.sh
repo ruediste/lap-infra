@@ -1,4 +1,5 @@
 #!/bin/bash
+
 if [ -z "$LAP_ENVIRONMENT" ]; then
     echo "Need to set LAP_ENVIRONMENT"
     exit 1

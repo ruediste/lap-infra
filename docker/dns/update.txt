@@ -1,0 +1,7 @@
+server localhost
+zone internal
+key dnskey gsZHukskPkfn7yyowacKGkCspUGQFv4wfZ7YdfhoDXI=
+update delete test.internal A
+update add test.internal 86400 A 10.10.10.1
+show
+send

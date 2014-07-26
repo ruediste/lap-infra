@@ -1,4 +1,4 @@
-FROM localhost:5000/ubuntu
+FROM localhost:5000/infra_ubuntu
 MAINTAINER = Ruedi Steinmann <ruediste@gmail.com>
 
 # download first, the more volatile aspects come later

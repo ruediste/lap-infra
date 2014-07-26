@@ -9,7 +9,7 @@
 
 # Size of the CoreOS cluster created by Vagrant
 # key: <hostname>
-$num_instances.merge!({ 'jupiter' => 3})
+$num_instances.merge!({ 'jupiter' => 1})
 
 # Official CoreOS channel from which updates should be downloaded
 # $update_channel.merge!({})
@@ -30,8 +30,10 @@ $num_instances.merge!({ 'jupiter' => 3})
 # Setting for VirtualBox VMs
 #$vb_gui = false
 
-#$vb_memory.merge!({})
+$vb_memory.merge!({'jupiter_1' => '2048'})
 #$vb_cpus.merge!({})
 
 # Static IPs
 $static_ip.merge!({ 'jupiter_1' => '192.168.0.10' })
+
+$bridge_interface.merge!({'jupiter_1' => 'wlan0' })

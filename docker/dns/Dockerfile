@@ -1,7 +1,7 @@
 # Build: docker build -t dns .
 # Run: docker run --volumes-from <environment> --name dns dns
 
-FROM localhost:5000/ubuntu
+FROM localhost:5000/infra_ubuntu
 MAINTAINER = Ruedi Steinmann <ruediste@gmail.com>
 
 # Install Packages
