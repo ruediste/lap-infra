@@ -14,7 +14,7 @@ internal.       IN      NS      ns.internal
 
 $ORIGIN internal.
 
-ns              IN      A       192.168.0.10
-git             IN      A       192.168.0.10
-trac            IN      A       192.168.0.10
-registry        IN      A       192.168.0.10
+ns              IN      A       %PRIMARY_IP%
+git             IN      A       %PRIMARY_IP%
+trac            IN      A       %PRIMARY_IP%
+registry        IN      A       %PRIMARY_IP%

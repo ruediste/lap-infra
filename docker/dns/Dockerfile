@@ -13,9 +13,7 @@ RUN mkdir -p /var/run/named; chown bind /var/run/named
 
 ADD etc/ /etc/bind/
 RUN chown -R bind /etc/bind
-
+ADD run.sh /run.sh
 
 EXPOSE 53
 
-# run named under user bind and in foreground, logging to stderr
-CMD ["/usr/sbin/named","-u","bind","-g", "-c","/etc/bind/named.conf"]
