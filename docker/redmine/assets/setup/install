@@ -1,0 +1,116 @@
+#!/bin/bash
+set -e
+
+REDMINE_VERSION=2.5.2
+
+mkdir -p /redmine
+cd /redmine
+
+# install redmine, use local copy if available
+if [ -f /redmine/setup/redmine-${REDMINE_VERSION}.tar.gz ]; then
+  tar -zvxf /redmine/setup/redmine-${REDMINE_VERSION}.tar.gz --strip=1 -C /redmine
+else
+  wget "http://www.redmine.org/releases/redmine-${REDMINE_VERSION}.tar.gz" -O - | tar -zvxf - --strip=1 -C /redmine
+fi
+
+# add support for mysql and postgresql databases
+echo 'gem "mysql2", "~> 0.3.11"' >> Gemfile
+echo 'gem "pg", ">= 0.11.0"' >> Gemfile
+
+# add gems for app server and memcache support
+echo 'gem "unicorn"' >> Gemfile
+echo 'gem "dalli", "~> 2.7.0"' >> Gemfile
+
+# following gems are added to fix some issues that are
+# generally seen when installing gems from the cache
+echo 'gem "fastercsv", "~> 1.5.0"' >> Gemfile
+echo 'gem "yard"' >> Gemfile
+
+# install gems, use cache if available
+if [ -d "/redmine/setup/cache" ]; then
+  mv /redmine/setup/cache vendor/
+fi
+bundle install --without development tests
+
+# some gems complain about missing database.yml, shut them up!
+cp config/database.yml.example config/database.yml
+
+# install themes
+. /redmine/setup/themes/install
+
+# install plugins
+. /redmine/setup/plugins/install
+
+# finalize redmine installation
+mkdir -p tmp tmp/pdf public/plugin_assets tmp/pids/ tmp/sockets/
+chmod -R u+rwX files log tmp
+chown -R www-data:www-data /redmine
+
+# disable default nginx configuration and enable redmine nginx configuration
+rm -f /etc/nginx/sites-enabled/default
+ln -s /etc/nginx/sites-available/redmine /etc/nginx/sites-enabled/redmine
+
+# setup log rotation for redmine
+cat > /etc/logrotate.d/redmine <<EOF
+/redmine/log/*.log {
+    weekly
+    missingok
+    rotate 52
+    compress
+    delaycompress
+    notifempty
+    copytruncate
+}
+EOF
+
+# configure supervisord to start nginx
+echo "daemon off;" >> /etc/nginx/nginx.conf
+cat > /etc/supervisor/conf.d/nginx.conf <<EOF
+[program:nginx]
+priority=20
+directory=/tmp
+command=/usr/sbin/nginx
+user=root
+autostart=false
+autorestart=true
+stdout_logfile=/var/log/supervisor/%(program_name)s.log
+stderr_logfile=/var/log/supervisor/%(program_name)s.log
+EOF
+
+# configure supervisord to start unicorn
+cat > /etc/supervisor/conf.d/unicorn.conf <<EOF
+[program:unicorn]
+priority=20
+directory=/redmine
+command=bundle exec unicorn_rails -E production -c /redmine/config/unicorn.rb
+user=root
+autostart=false
+autorestart=true
+stdout_logfile=/var/log/supervisor/%(program_name)s.log
+stderr_logfile=/var/log/supervisor/%(program_name)s.log
+EOF
+
+# supervise mysql server start (manual)
+cat > /etc/supervisor/conf.d/mysqld.conf <<EOF
+[program:mysqld]
+priority=20
+directory=/tmp
+command=/usr/bin/mysqld_safe
+user=root
+autostart=false
+autorestart=true
+stdout_logfile=/var/log/supervisor/%(program_name)s.log
+stderr_logfile=/var/log/supervisor/%(program_name)s.log
+EOF
+
+cat > /etc/supervisor/conf.d/memcached.conf <<EOF
+[program:memcached]
+priority=20
+directory=/tmp
+command=/usr/bin/memcached -m {{MEMCACHED_SIZE}}
+user=www-data
+autostart=false
+autorestart=true
+stdout_logfile=/var/log/supervisor/%(program_name)s.log
+stderr_logfile=/var/log/supervisor/%(program_name)s.log
+EOF
