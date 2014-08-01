@@ -1,19 +1,19 @@
 FROM localhost:5000/infra_ubuntu
 
-RUN apt-get install -y python-software-properties
-RUN apt-get install -y software-properties-common
+RUN apt-get install -y python-software-properties software-properties-common \
+	supervisor logrotate mysql-client\
+	&& apt-get clean
+
 RUN add-apt-repository -y ppa:brightbox/ruby-ng && apt-get update
 RUN	apt-get install -y make imagemagick nginx \
       memcached subversion git ruby2.1 \
       ruby2.1-dev libcurl4-openssl-dev libssl-dev \
       libmagickcore-dev libmagickwand-dev libmysqlclient-dev libpq-dev \
-      libxslt1-dev libffi-dev libyaml-dev zlib1g-dev
+      libxslt1-dev libffi-dev libyaml-dev zlib1g-dev \
+      && apt-get clean
       
 RUN gem install --no-ri --no-rdoc bundler && \
     apt-get clean # 20140519
-
-RUN apt-get install -y wget unzip supervisor logrotate
-RUN apt-get install -y mysql-client
 
 ADD assets/setup/ /redmine/setup/
 RUN chmod 755 /redmine/setup/install
