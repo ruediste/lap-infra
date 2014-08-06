@@ -1,0 +1,42 @@
+@startuml
+
+() Internet
+[NAT Router] as router
+Internet -> router
+[Switch] as switch
+router --> switch
+
+package "Host1" {
+	switch <-- Host1
+	
+	package "Master" {
+		switch <-- Master
+		[git] as c1
+		[dns] as c2
+		[registry] as c3
+		[Container] as c4
+		[Container] as c5
+	}
+	
+	package "Node1" {
+		switch <-- Node1
+		[Container] as c11
+		[Container] as c12
+	}
+}
+package "Host2" {
+	switch <-- Host2
+	
+	package "Node2" {
+		switch <-- Node2
+		[Container] as c21
+		[Container] as c22
+	}
+}
+package "WorkStation1" {
+	switch <-- WorkStation1
+}
+package "WorkStation2" {
+	switch <-- WorkStation2
+}
+@enduml

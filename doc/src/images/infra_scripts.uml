@@ -1,0 +1,54 @@
+@startuml
+
+
+object "restart.sh" as restart {
+  stop.sh
+  start.sh
+}
+restart --> stop
+restart --> start
+
+object "start.sh" as start {
+  start and link infrastructure containers
+}
+
+object "stop.sh" as stop {
+  stop all containers starting with "_infra"
+}
+
+object "buildAndStart.sh" as buildAndStart {
+  build.sh
+  restart.sh
+}
+buildAndStart --> build
+buildAndStart --> restart
+
+
+object "build.sh" as build {
+  build all infrastructure images
+}
+
+object "deployToProduction.sh" as deployToProduction {
+	stop test registry
+	stop test gitolite
+	prod: take snapshot
+	pushImages.sh
+	push git to prod
+	prod: pull git
+	prod: pullImages.sh
+	prod: `restart.sh`
+}
+deployToProduction --> restart
+deployToProduction --> pushImages
+deployToProduction --> pullImages
+
+object "pushImages.sh" as pushImages {
+  ssh prod -L5000:localhost:5000  
+  push images to prod registry
+}
+
+object "pullImages.sh" as pullImages {
+  pull infrastructure images from registry
+}
+
+@enduml

@@ -1,0 +1,28 @@
+@startuml
+
+
+package "TestNode" {
+	[git] as gitTest
+	[registry] as registryTest
+	[build] as buildTest
+	gitTest-->buildTest: pull
+	dockerTest <.. buildTest: manage build
+	() "docker" as dockerTest
+}
+
+
+package "ProdNode" {
+	[git] as gitProd
+	[registry] as registryProd
+	[build] as buildProd
+	() "docker" as dockerProd
+	
+	registryProd <-- dockerTest: push
+	registryProd --> dockerProd: pull
+	gitProd <-- buildTest: push
+}
+package "WorkStation" {
+}
+ 
+gitTest <-- WorkStation: push
+@enduml
