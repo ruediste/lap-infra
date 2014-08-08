@@ -7,6 +7,8 @@ Vagrant.require_version ">= 1.6.0"
 
 CLOUD_CONFIG_PATH = File.join(File.dirname(__FILE__), "user-data")
 CONFIG = File.join(File.dirname(__FILE__), "config.rb")
+OPENJDK = File.join(File.dirname(__FILE__), "openjdk.tar.xz")
+BTRBCK = File.join(File.dirname(__FILE__), "btrbck.jar")
 
 #determine hostname
 require 'socket'
@@ -32,6 +34,18 @@ end
 
 if File.exist?(CONFIG)
   require CONFIG
+end
+
+# download the openjkd package and extract the data.tar.xz
+if !File.exist?(OPENJDK)
+	system ("/usr/bin/wget -O openjdk.deb http://security.ubuntu.com/ubuntu/pool/main/o/openjdk-7/openjdk-7-jre-headless_7u55-2.4.7-1ubuntu1_amd64.deb")
+	system ("ar p openjdk.deb data.tar.xz > #{OPENJDK}")
+	system ("rm openjdk.deb")
+end
+
+# download btrbck
+if !File.exist?(BTRBCK)
+	system ("/usr/bin/wget -O btrbck.jar https://github.com/ruediste1/btrbck/releases/download/1.0/btrbck-cli-1.0.jar")
 end
 
 def getValue(map, i)
@@ -121,6 +135,12 @@ Vagrant.configure("2") do |config|
       if $static_ip["#{$hostname}_#{i}"]
       	config.vm.provision :shell, :inline => "echo #{$static_ip["#{$hostname}_#{i}"]} > /etc/primaryip", :privileged => true
       end
+      
+      # setup btrbck
+      config.vm.provision :file, :source => "installBtrBck.sh", :destination => "installBtrBck.sh"
+      config.vm.provision :file, :source => OPENJDK, :destination => "openjdk.tar.xz"
+      config.vm.provision :file, :source => BTRBCK, :destination => "btrbck.jar"
+      config.vm.provision :shell, :inline => "chmod 755 installBtrBck.sh; ./installBtrBck.sh", :privileged => true      
 
     end
   end
