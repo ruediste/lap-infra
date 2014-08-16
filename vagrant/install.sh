@@ -27,8 +27,7 @@ if [ ! -e /dev/sdb1 ]; then
   mkfs.btrfs /dev/sdb1
 fi
 
-# add systemd unit
-if [ ! -e /etc/systemd/system/data.mount ]; then
+# add systemd unit to mount the /data partition
 cat > /etc/systemd/system/data.mount <<EOF
 [Unit]
 Description=Mount for data disk
@@ -41,13 +40,36 @@ Type=btrfs
 
 [Install]
 WantedBy=multi-user.target 
-
 EOF
-  systemctl enable data.mount
-  systemctl start data.mount
-fi
+systemctl enable data.mount
+systemctl start data.mount
+
 
 # setup btrbck repo
 if [ ! -e /data/.backup ]; then
   btrbck -r /data create -a
 fi
+
+# automatically trigger backup
+cat > /etc/systemd/system/backup.service <<EOF
+[Unit]
+Description=perform a btrbck process on /data
+After=data.mount
+
+[Service]
+Type=simple
+ExecStart=/opt/bin/btrbck -r /data process
+EOF
+
+cat > /etc/systemd/system/backup.timer <<EOF
+[Unit]
+Description=timer triggering a btrbck process on /data
+
+[Timer]
+OnCalendar=*-*-* *:*:00
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl enable backup.timer

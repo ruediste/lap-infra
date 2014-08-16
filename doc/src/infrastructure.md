@@ -223,23 +223,19 @@ Create clone the `lap-infra` directory to `/data/lap-infra`.
     cd /data/lap-infra
     git clone git://github.com/ruediste1/lap-infra.git .
 
-Now you can build the containers
+Now you can build and start the containers
     
     cd /data/lap-infra/docker
     ./build.sh
-
-Before starting the containers, the registry needs to be made available
-
-    docker pull registry
-    docker tag registry localhost:5000/registry
-    
-Now you are ready to start your infrstructure
-
     ./start.sh
+   
+Building the containers for the first time takes some time, since
+a lot of downloads are beeing performed.
 
-This starts the complete infrastructure. Create the infrastructure git
-repositories and you are done.
-
+## Setup Backup
+The vagrant script already created a BTRBCK application stream repository
+in `/data`. The `start.sh` script created a stream for each application. Now
+it is time to set up the backup. First you need to set up  
 
 **Hint:** For debugging or development of the getting started stuff, you can seed
 the node with the registry container from the host. Run 
@@ -257,6 +253,12 @@ to the node by executing
 in the vagrant directory.
 
 # OLD
+
+Before starting the containers, the registry needs to be made available
+
+    docker pull registry
+    docker tag registry localhost:5000/registry
+    
 On your seed machine, go to your git directory and do
 
     git clone git@github.com:ruediste1/infra-docker.git
