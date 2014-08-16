@@ -140,10 +140,6 @@ to the production node.
  
 ![](images/infra_development_process.png)
 
-To simplify the management of container images the following naming convention is used when pushing them to a registry:
- `infra/<commit hash>/<container name>`. However during a build and in the `Dockerfile`s the naming convention is 
- `infra/<container name>`
-
 A new or existing test node is prepared for testing by 
 1. fetch snapshot from production
 1. restore snapshot
@@ -217,10 +213,13 @@ Now that your master node is running, log in using
 
     vagrant ssh
 
+Create a backup stream for the git repository checkout
+
+    sudo btrbck -r /data create lap-infra
+    sudo chown core:core /data/lap-infra
+    
 Create clone the `lap-infra` directory to `/data/lap-infra`.
 
-    sudo mkdir -p /data/lap-infra
-    sudo chown core:core /data/lap-infra
     cd /data/lap-infra
     git clone git://github.com/ruediste1/lap-infra.git .
 
@@ -238,6 +237,10 @@ Now you are ready to start your infrstructure
 
     ./start.sh
 
+This starts the complete infrastructure. Create the infrastructure git
+repositories and you are done.
+
+
 **Hint:** For debugging or development of the getting started stuff, you can seed
 the node with the registry container from the host. Run 
 
@@ -252,9 +255,6 @@ to the node by executing
     sudo docker save ubuntu:14.04 | vagrant ssh -- docker load
 
 in the vagrant directory.
-
-This starts the complete infrastructure. Create the infrastructure git
-repositories and you are done.
 
 # OLD
 On your seed machine, go to your git directory and do

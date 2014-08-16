@@ -27,6 +27,9 @@ $num_instances.merge!({ 'jupiter' => 1})
 #   export DOCKER_HOST='tcp://127.0.0.1:2375'
 #$expose_docker_tcp=2375
 
+# File for the server disk
+#$server_disk_file = 'server_disk.vdi'
+
 # Setting for VirtualBox VMs
 #$vb_gui = false
 

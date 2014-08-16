@@ -25,6 +25,7 @@ $vb_memory = Hash.new 1024
 $vb_cpus = Hash.new 1
 $static_ip = {}
 $bridge_interface = {}
+$server_disk_file = 'server_disk.vdi'
 
 # Attempt to apply the deprecated environment variable NUM_INSTANCES to
 # $num_instances while allowing config.rb to override it
@@ -112,7 +113,18 @@ Vagrant.configure("2") do |config|
         vb.memory = $vb_memory["#{$hostname}_#{i}"]
         vb.cpus = $vb_cpus["#{$hostname}_#{i}"]
       end
+      
+      # setup additional disk
+      if i==1 
+       config.vm.provider :virtualbox do |vb|
+           unless File.exist?($server_disk_file)
+             vb.customize ['createhd', '--filename', $server_disk_file, '--size', 500 * 1024]
+           end
+           vb.customize ['storageattach', :id, '--storagectl', 'IDE Controller', '--port', 1, '--device', 0, '--type', 'hdd', '--medium', $server_disk_file]
+        end
+      end 
 
+      # configure network
       if $static_ip["#{$hostname}_#{i}"]
         config.vm.network "public_network", bridge: $bridge_interface["#{$hostname}_#{i}"], 
           ip: $static_ip["#{$hostname}_#{i}"]
@@ -137,10 +149,10 @@ Vagrant.configure("2") do |config|
       end
       
       # setup btrbck
-      config.vm.provision :file, :source => "installBtrBck.sh", :destination => "installBtrBck.sh"
+      config.vm.provision :file, :source => "install.sh", :destination => "install.sh"
       config.vm.provision :file, :source => OPENJDK, :destination => "openjdk.tar.xz"
       config.vm.provision :file, :source => BTRBCK, :destination => "btrbck.jar"
-      config.vm.provision :shell, :inline => "chmod 755 installBtrBck.sh; ./installBtrBck.sh", :privileged => true      
+      config.vm.provision :shell, :inline => "chmod 755 install.sh; ./install.sh", :privileged => true      
 
     end
   end
