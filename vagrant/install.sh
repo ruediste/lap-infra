@@ -17,7 +17,7 @@ mv btrbck.jar /opt/btrbck
 # add btrbck launcher
 cat > /opt/bin/btrbck <<EOF
 #!/bin/bash
-java -jar /opt/btrbck/btrbck.jar \$@
+/opt/bin/java -jar /opt/btrbck/btrbck.jar \$@
 EOF
 chmod 755 /opt/bin/btrbck
 
@@ -58,7 +58,7 @@ After=data.mount
 
 [Service]
 Type=simple
-ExecStart=/opt/bin/btrbck -r /data process
+ExecStart=/opt/bin/btrbck -r /data process -sudoRemoteBtrbck
 EOF
 
 cat > /etc/systemd/system/backup.timer <<EOF

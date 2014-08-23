@@ -235,7 +235,71 @@ a lot of downloads are beeing performed.
 ## Setup Backup
 The vagrant script already created a BTRBCK application stream repository
 in `/data`. The `start.sh` script created a stream for each application. Now
-it is time to set up the backup. First you need to set up  
+it is time to set up the backup.
+
+First configure your ssh connection. The admin rsa key has already been installed.
+Create a ssh config file under `/root/.ssh/config`
+
+    cat > /root/.ssh/config <<EOF
+    Host backup
+      HostName 192.168.0.103
+      Port 22
+      User ruedi
+    EOF
+
+Replace the hostname and the user. Add the `admin_rsa.put` key to the `~/.ssh/authorized_keys` 
+of the backup host. Now perform an `ssh backup` to add the remote host
+to the known hosts.
+
+Now configure the repository synchronization
+
+    cat > /data/.backup/repository.xml <<EOF
+    <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    <applicationStreamRepository version="1">
+    
+      <syncConfiguration 
+        direction="PUSH" 
+        sshTarget="backup" 
+        remoteRepoLocation="/data/backup" 
+        createRemoteIfNecessary="true" 
+        streamPatterns="*"/>
+    </applicationStreamRepository>
+    EOF
+    
+Replace the `remoteRepoLocation`. Then configure all streams. Replace all `/data/.backup/<xxx>/<xxx>.xml`
+files using the following command:
+
+	cd /data/.backup && find . -maxdepth 1 -mindepth 1 -type d -print0 | xargs -0 -IX bash -c "set +H && cat > /data/.backup/X/X.xml <<EOF
+	<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
+	 <!--
+	 initialRetentionPeriod
+	   defines for how long no streams should be pruned
+	   sample: P1D (one day)
+	 snapshotInterval
+	   defines how often the process command will create a snapshot
+	   sample: PT10M
+	  -->
+	 <stream initialRetentionPeriod=\"P1D\" snapshotInterval=\"PT10M\" version=\"1\">
+	   <!--
+	   A retention describes for how long snapshots are kept
+	   period
+	     time the retention is active
+	   timeUnit
+	   snapshotsPerUnit
+	     snapshotPerUnit snapshots are kept per time unit
+	     time units: SECOND, MINUTE, HOUR, DAY, WEEK, MONTH, YEAR, DECADE 
+	   -->
+	   <retention period=\"P1W\" timeUnit=\"DAY\" snapshotsPerTimeUnit=\"1\"/>
+	   <retention period=\"P1M\" timeUnit=\"WEEK\" snapshotsPerTimeUnit=\"1\"/>
+	   <retention period=\"P1Y\" timeUnit=\"MONTH\" snapshotsPerTimeUnit=\"1\"/>
+	   <retention period=\"P30Y\" timeUnit=\"YEAR\" snapshotsPerTimeUnit=\"1\"/>
+	</stream>
+	EOF"
+	
+Now your backup should be up and running. A `systemd` timer has already be installed to trigger
+the snapshot/sync process every minute. All streams are configured for a snapshot every 10 minutes
+and to keep all snapshots for a day, then keep one snapshot per day for a week, one per week for
+a month, one per month for a year and one per year for 30 years. 
 
 **Hint:** For debugging or development of the getting started stuff, you can seed
 the node with the registry container from the host. Run 
