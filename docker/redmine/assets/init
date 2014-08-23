@@ -59,6 +59,18 @@ esac
 
 MYSQL_CMD="mysql -u root -h $DB_HOST -P $DB_PORT"
 
+ # wait for mysql server to start (max 120 seconds)
+timeout=120
+while ! "SHOW DATABASES" | $MYSQL_CMD >/dev/null 2>&1
+do
+	timeout=$(expr $timeout - 1)
+	if [ $timeout -eq 0 ]; then
+		echo "Timeout error occurred trying to start MySQL Daemon."
+		exit 1
+	fi
+	sleep 1
+done
+	
 # initialize DB if empty
 if ! echo "USE ${DB_NAME}" |$MYSQL_CMD >/dev/null 2>&1; then
 	DB_INIT="yes"
